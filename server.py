@@ -1,5 +1,5 @@
 #  coding: utf-8 
-import SocketServer, os, socket
+import SocketServer, socket
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -32,64 +32,37 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
         print ("Got a request of: %s\n" % self.data)
-	path = (self.data.split('\r\n')[0]).split(' ')[1]
-	request = (self.data.split('\r\n')[1]).split(': ')[1]
 
-	#os.chdir(hostline + path)
+	path = (self.data.split('\r\n')[0]).split(' ')[1] #/www
+
+	requestType = (self.data.split('\r\n')[0]).split(' ')[2] #HTTP/1.1
+
+	request = (self.data.split('\r\n')[1]).split(': ')[1] #host:port
 
 	host = request.split(':')[0]
 	port = request.split(':')[1]
 
-	print(host+path,port)
+	print(host,path,port)
+	print(request, requestType)
 
+	try:
+		filepath = path[1:]
+		if path.endswith('/'):
+			path = path + '/'
+		if 'index.html' not in path.split('/'):
+			filepath = path[1:]+'/index.html'
 
-	serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	#serverSocket.bind(("0.0.0.0", 6666))
-	serverSocket.listen(5)
+		f = open(filepath, 'r')
+		html = f.read()
 
-	while True:
-		(incomingSocket, address) = serverSocket.accept()
+		self.request.sendall(requestType+" 200 OK\n"
+	        +"Content-Type: text/html\n"
+        	+html)
 
-		childPid = os.fork()
-		if (childPid != 0):
-			#must be still in the connecting accepting process
-			continue
-		#else, we must be in a client talking process
-
-		outgoingSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		outgoingSocket.connect(("host+path", port))
-	
-		done = False
-		while not done:
-			incomingSocket.setblocking(0)
-			try:
-				part = incomingSocket.recv(2048)
-			except IOError, exception:
-				if exception.errno == 11:
-					part = None
-				else:
-					raise 		
-			if (part):
-				outgoingSocket.sendall(part) 
-
-
-			outgoingSocket.setblocking(0)
-			try:
-				part = outgoingSocket.recv(2048)
-			except IOError, exception:
-				if exception.errno == 11:
-					part = None
-				else:
-					raise 		
-			if (part):
-				incomingSocket.sendall(part) 
-
-
-
-
-
-	
-	#self.request.sendall(request+path)
+	except IOError, exception:
+		self.request.sendall(requestType+"404 NOT FOUND\n"
+         	+"Content-Type: text/html\n"+"<Title>Error 404 - Page not found </Title>")
+		print(exception)
 
 
 if __name__ == "__main__":
