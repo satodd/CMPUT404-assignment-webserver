@@ -33,59 +33,56 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         self.data = self.request.recv(1024).strip()
         print ("Got a request of: %s\n" % self.data)
 
-	path = (self.data.split('\r\n')[0]).split(' ')[1] #/www
-
-	requestType = (self.data.split('\r\n')[0]).split(' ')[2] #HTTP/1.1
-	request = (self.data.split('\r\n')[1]).split(': ')[1] #host:port
-	#acceptType = ((self.data.split('\r\n')[3]).split(' ')[1]).split(',')[0] #text/html
-	#acceptType =  ((self.data.split('\r\n')[3]).split(' ')[1])
+	path = (self.data.split('\r\n')[0]).split(' ')[1] 				#path
+	requestType = (self.data.split('\r\n')[0]).split(' ')[2] 		#HTTP/1.1
 
 	if path.startswith('/'):
 		path = path[1:]
-
-	#host = request.split(':')[0]
-	#port = request.split(':')[1]
-
+		
 	host = "127.0.0.1"
 	port = 8080
-
-
+#split by splash, count 
 	try:
-		#filepath = path[1:]
-		
+
 		path = 'www/' + path
 
-
-		if ('index.html' not in path.split('/')) and ("base.css" not in path.split('/')): #pulls up index.html, checks html or css
-			path = path +'/index.html'
-
-		f = open(path, 'r')
+		if (path.endswith('/')):									#checks to see if looking for directory, serves index.html file
+			path = path +'/index.html' 
+			
+		#checks for correct pathing
+		#counts direction of paths, if less then 0, OK, if greater then 0, throw 404
+		tmppath = path
+		
+		tmppath = tmppath.split('/')
+				
+		x = 0
+		for item in tmppath:
+			if (item == ".."):
+				x = x + 1
+			else:
+				x = x - 1
+			
+		if (x > 0):
+			raise IOError											#throws 404 error
+			
+		f = open(path, 'r')											#reads path file
 		html = f.read()
 		
-		if ('base.css' in path.split('/')):
+		if ('css' in (path.split('/'))[-1].split('.')): 				#checks for html vs css
 			acceptType = "text/css"
 		else:
 			acceptType = "text/html"
-		
-		print(requestType+" 200 OK\n"
-	        +"Content-Type:" + acceptType +" \n\n"
-        	+ html + "\r\n")
-        	
-        	
-		self.request.sendall(requestType+" 200 OK\n"
+			
+			
+		self.request.sendall(requestType+" 200 OK\n"				#Sends 200 message
 	        +"Content-Type:" + acceptType +" \n\n"
         	+ html + "\r\n")
 
 	except IOError, exception:
-		self.request.sendall(requestType+" 404 Not Found \n\n" 
+		self.request.sendall(requestType+" 404 Not Found \n\n"		#Sends 404 messages
 		+ "<html><body>404 Error</body></html>\r\n")
 		print(exception)
-	
-	
-	print(host,path,port)
-	print(request, requestType)
-	
-
+			
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
 
