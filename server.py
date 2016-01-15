@@ -37,17 +37,21 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
 	requestType = (self.data.split('\r\n')[0]).split(' ')[2] #HTTP/1.1
 	request = (self.data.split('\r\n')[1]).split(': ')[1] #host:port
-
-	acceptType = ((self.data.split('\r\n')[3]).split(' ')[1]).split(',')[0] #text/html
+	#acceptType = ((self.data.split('\r\n')[3]).split(' ')[1]).split(',')[0] #text/html
+	acceptType =  ((self.data.split('\r\n')[3]).split(' ')[1])
 
 	if path.startswith('/'):
 		path = path[1:]
 
-	host = request.split(':')[0]
-	port = request.split(':')[1]
+	#host = request.split(':')[0]
+	#port = request.split(':')[1]
 
-	#print(host,path,port)
-	#print(request, requestType)
+	host = "127.0.0.1"
+	port = 8080
+	
+	
+	print(host,path,port)
+	print(request, requestType)
 
 	try:
 		filepath = path[1:]
@@ -56,15 +60,15 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 			path = 'www/' + path
 			filepath = path
 
-		if 'index.html' not in path.split('/'): #pulls up index.html
+		if ('index.html' not in path.split('/')) and ("base.css" not in path.split('/')): #pulls up index.html, checks html or css
 			filepath = path +'/index.html'
 
 		f = open(filepath, 'r')
 		html = f.read()
 
 		self.request.sendall(requestType+" 200 OK\n"
-	        +"Content-Type:" + acceptType+"\n"
-        	+html)
+	        +"Content-Type:" + text/css +"\n"
+        	+html+"\r\n")
 
 	except IOError, exception:
 		self.request.sendall(requestType+" 404 Not Found\n" 
