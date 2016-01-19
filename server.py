@@ -1,6 +1,7 @@
 #  coding: utf-8 
-import SocketServer, socket
+import SocketServer
 
+# Edited 2016 Sarah Todd under the handle function
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +42,7 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 		
 	host = "127.0.0.1"
 	port = 8080
-#split by splash, count 
+
 	try:
 
 		path = 'www/' + path
